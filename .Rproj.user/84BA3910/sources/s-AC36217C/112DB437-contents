@@ -1,0 +1,25 @@
+library(tidyverse)
+library(data.table)
+library(janitor)
+mo_mat <- fread("data/Relatedness_FullMatrix_MO.txt") %>% 
+           as.matrix(rownames = 1)
+
+mo <- read_delim("data/SoayPlates92-97ForGenotypingLab.txt") %>% 
+        clean_names()
+
+add_rel <- function(id, mum_id) {
+        if (!is.na(mum_id)) {
+                out <- mo_mat[rownames(mo_mat) == as.character(id), colnames(mo_mat) == as.character(mum_id)][1]
+                out  
+        } else {
+                out <- NA
+        }
+}
+
+rel <- map2(mo$id, mo$parent_1_mum, add_rel) %>% 
+        unlist()
+
+mo$rel <- rel
+
+hist(mo$rel)
+WriteXLS::WriteXLS(mo, "mo_rel.xls")
